@@ -1,13 +1,155 @@
-import {test} from 'node:test';import assert from 'node:assert/strict';import {Game} from '../src/engine.js';import {stages,torque,lifts,litmus,medal} from '../src/data.js';
-function setup(){let time=0;const g=new Game(()=>time);return {g,advance(ms){time+=ms;g.tick();},set(t){time=t;g.tick();}};}
-function ready(s){s.advance(stages[s.g.stage].tutorial*1000);if(s.g.practicing){s.g.move(-2);s.g.answer();}}
-function solve(s,retry=false){const g=s.g;if(retry){if(g.stage===1){g.pivot=5;g.answer();}else g.answer('wrong');assert.equal(g.records[g.stage][g.question].points,0);}if(g.stage===1){g.pivot=1;g.answer();}else g.answer(g.current.answer);}
-for(const retry of [false,true])test(`complete four stages ${retry?'retry':'first'} scores and duplicate locks`,()=>{const s=setup();s.g.start();for(let stage=0;stage<4;stage++){ready(s);const n=stages[stage].questions.length;for(let i=0;i<n;i++){solve(s,retry);const score=s.g.score;assert.equal(s.g.answer(s.g.current.answer),false);assert.equal(s.g.score,score);s.advance(750);}assert.equal(s.g.records[stage].reduce((v,r)=>v+r.points,0),retry?(stage===0?15:13):25);}assert.equal(s.g.phase,'result');assert.equal(s.g.score,retry?54:100);assert.ok(s.g.score<=100);s.g.start();assert.equal(s.g.score,0);assert.equal(s.g.stage,0);assert.equal(s.g.phase,'tutorial');assert.ok(s.g.records.flat().every(r=>r.status==='unanswered'&&r.attempts===0));});
-test('tutorial counted, exact deadline wins, timeout advances and unfinished earns zero',()=>{const s=setup();s.g.start();assert.equal(s.g.answer('cold'),false);s.advance(45000);assert.equal(s.g.stage,1);assert.equal(s.g.score,0);assert.ok(s.g.records[0].every(r=>r.status==='timeout'));s.set(225000);assert.equal(s.g.phase,'result');assert.equal(s.g.score,0);});
-test('partial score survives timeout, background elapsed catches up',()=>{const s=setup();s.g.start();ready(s);solve(s);s.set(45000);assert.equal(s.g.score,5);assert.equal(s.g.stage,1);s.set(225000);assert.equal(s.g.phase,'result');assert.equal(s.g.score,5);});
-test('stale answer at deadline never applies to next stage',()=>{let now=0;const g=new Game(()=>now);g.start();now=5000;g.tick();now=45000;assert.equal(g.answer('cold'),false);assert.equal(g.stage,1);assert.equal(g.score,0);});
-for(const [i,q] of stages[1].questions.entries())test(`lever bank question ${i+1}: geometry, all positions and solution`,()=>{let solutions=0;for(let p=1;p<6;p++){const t=torque(q,p);assert.equal(t.effortArm+t.resistanceArm,6);assert.equal(t.effort,q.force*(6-p));assert.equal(t.resistance,q.mass*p);assert.equal(lifts(q,p),t.effort>t.resistance);solutions+=Number(lifts(q,p));}assert.ok(solutions>0);assert.ok(lifts(q,1));});
-test('balance does not lift; pivot clamps; practice zero',()=>{assert.equal(lifts({mass:12,force:6,length:6},2),false);const s=setup();s.g.start();s.advance(45000);ready(s);assert.equal(s.g.score,0);for(let i=0;i<20;i++)s.g.move(-1);assert.equal(s.g.pivot,1);for(let i=0;i<20;i++)s.g.move(1);assert.equal(s.g.pivot,5);});
-for(const [property,paper,expected] of [['acid','red','red'],['acid','blue','red'],['base','red','blue'],['base','blue','blue'],['neutral','red','red'],['neutral','blue','blue']])test(`litmus ${property}/${paper}`,()=>assert.equal(litmus(property,paper),expected));
-for(const [score,tier] of [[0,'learner'],[59,'learner'],[60,'master'],[79,'master'],[80,'expert'],[94,'expert'],[95,'king'],[100,'king']])test(`medal boundary ${score}`,()=>{assert.equal(medal(score).tier,tier);assert.equal(score>=60,tier!=='learner');});
-test('food and planet banks exact, unique choices and 25 per stage',()=>{assert.deepEqual(stages[0].questions.map(q=>q.answer),['cold','cold','cold','shelf','shelf']);assert.deepEqual(stages[3].questions.map(q=>q.answer),['水星','木星','土星']);for(const q of stages[3].questions){assert.equal(new Set(q.choices).size,4);assert.ok(q.choices.includes(q.answer));}for(const s of stages)assert.equal(s.questions.reduce((sum,q)=>sum+q.first,0),25);});
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { Game } from '../src/engine.js';
+import { stages, practice, torque, lifts, leverOutcome, leverPasses, litmus, medal } from '../src/data.js';
+import { foodArt } from '../src/food-art.js';
+
+function setup() {
+  let time = 0;
+  const g = new Game(() => time);
+  return { g, advance(ms) { time += ms; g.tick(); } };
+}
+function ready(s) {
+  s.g.begin();
+  if (s.g.practicing) {
+    s.g.move(-1);
+    assert.equal(s.g.answer(), true);
+    assert.equal(s.g.outcome, 'balance');
+    s.advance(1200);
+    s.g.next();
+  }
+}
+function solve(s, retry = false) {
+  const g = s.g;
+  if (retry) {
+    if (g.stage === 1) { g.pivot = g.current.length - 1; g.answer(); }
+    else g.answer('wrong');
+    assert.equal(g.records[g.stage][g.question].points, 0);
+  }
+  if (g.stage === 1) { g.pivot = 1; g.answer(); }
+  else g.answer(g.current.answer);
+}
+
+for (const retry of [false, true]) test(`four stages ${retry ? 'retry' : 'first'} scoring, duplicate locks and reset`, () => {
+  const s = setup(); s.g.start();
+  for (let stage = 0; stage < 4; stage++) {
+    ready(s);
+    for (let i = 0; i < stages[stage].questions.length; i++) {
+      solve(s, retry);
+      const score = s.g.score;
+      for (let n = 0; n < 10; n++) assert.equal(s.g.answer(s.g.current.answer), false);
+      assert.equal(s.g.score, score);
+      s.advance(1200);
+      s.g.next();
+    }
+    assert.equal(s.g.records[stage].reduce((n, r) => n + r.points, 0), retry ? (stage === 0 ? 15 : 13) : 25);
+  }
+  assert.equal(s.g.phase, 'result');
+  assert.equal(s.g.score, retry ? 54 : 100);
+  s.g.start();
+  assert.equal(s.g.stage, 0); assert.equal(s.g.phase, 'tutorial'); assert.equal(s.g.score, 0);
+  assert.equal(s.g.outcome, null); assert.equal(s.g.selected, null);
+  assert.deepEqual(s.g.observations, {});
+  assert.ok(s.g.records.flat().every(r => r.status === 'unanswered' && r.attempts === 0 && r.points === 0));
+});
+
+test('24 hours idle in every tutorial and active stage never times out or changes score', () => {
+  const s = setup(); s.g.start();
+  for (let stage = 0; stage < 4; stage++) {
+    s.advance(86400000);
+    assert.equal(s.g.phase, 'tutorial'); assert.equal(s.g.stage, stage);
+    ready(s);
+    s.advance(86400000);
+    assert.equal(s.g.phase, 'play'); assert.equal(s.g.question, 0); assert.equal(s.g.stage, stage);
+    for (let i = 0; i < stages[stage].questions.length; i++) { solve(s); s.advance(1200); s.g.next(); }
+  }
+  assert.equal(s.g.score, 100);
+});
+
+test('old 45/70/55/55 boundaries cannot advance unanswered questions', () => {
+  const s = setup(); s.g.start(); s.g.begin();
+  for (const ms of [45000, 70000, 55000, 55000, 1000000]) s.advance(ms);
+  assert.equal(s.g.stage, 0); assert.equal(s.g.question, 0); assert.equal(s.g.score, 0);
+  assert.equal(s.g.answer('shelf'), true); assert.equal(s.g.score, 5);
+  s.advance(750); assert.equal(s.g.question, 0); s.g.next(); assert.equal(s.g.question, 1);
+});
+
+test('no answering before explicit tutorial start; queued animation click cannot answer next question', () => {
+  const s = setup(); s.g.start();
+  assert.equal(s.g.answer('shelf'), false);
+  s.g.begin(); solve(s);
+  // Clock advances without a render tick. Old feedback click must still be rejected.
+  let time = 0; const g = new Game(() => time); g.start(); g.begin(); g.answer('shelf'); time = 750;
+  assert.equal(g.answer('cold'), false); assert.equal(g.question, 0); assert.equal(g.score, 5);
+  g.next(); assert.equal(g.question, 1);
+});
+
+for (const [i, q] of [practice, ...stages[1].questions].entries()) test(`lever ${i}: all positions, integer balance and lift solutions`, () => {
+  let balances = 0, liftPositions = 0, failures = 0;
+  for (let p = 1; p < q.length; p++) {
+    const t = torque(q, p);
+    assert.equal(t.effortArm + t.resistanceArm, q.length);
+    assert.equal(t.effort, q.force * (q.length - p)); assert.equal(t.resistance, q.mass * p);
+    assert.equal(leverPasses(q, p), t.effort >= t.resistance);
+    assert.equal(lifts(q, p), t.effort > t.resistance);
+    balances += Number(leverOutcome(q, p) === 'balance');
+    liftPositions += Number(lifts(q, p)); failures += Number(!leverPasses(q, p));
+  }
+  assert.ok(balances > 0 && liftPositions > 0 && failures > 0);
+});
+
+test('practice feedback retains pivot, equality passes without lifting and gives zero points', () => {
+  const s = setup(); s.g.start(); s.g.enter(1); s.g.begin();
+  assert.equal(s.g.answer(), false); assert.equal(s.g.outcome, 'insufficient');
+  s.g.move(-1); assert.equal(s.g.pivot, 2); assert.equal(s.g.answer(), true);
+  assert.equal(s.g.phase, 'practice-feedback'); assert.equal(s.g.pivot, 2);
+  assert.equal(s.g.outcome, 'balance'); assert.match(s.g.feedback, /力矩平衡/);
+  assert.doesNotMatch(s.g.feedback, /貨箱抬起/); assert.equal(s.g.score, 0);
+  s.g.move(-1); assert.equal(s.g.pivot, 2); assert.equal(s.g.answer(), false);
+  s.advance(1200); assert.equal(s.g.practicing, true); s.g.next(); assert.equal(s.g.practicing, false); assert.equal(s.g.question, 0); assert.equal(s.g.pivot, 3);
+});
+
+test('formal equality succeeds with correct score; insufficient attempts give repeatable reactions and retry score', () => {
+  const s = setup(); s.g.start(); s.g.enter(1); ready(s);
+  assert.equal(s.g.answer(), false); const reaction = s.g.reaction;
+  assert.equal(s.g.answer(), false); assert.equal(s.g.reaction, reaction + 1); assert.equal(s.g.score, 0);
+  s.g.move(-1); assert.equal(s.g.answer(), true);
+  assert.equal(s.g.outcome, 'balance'); assert.equal(s.g.score, 3);
+  assert.match(s.g.feedback, /力矩平衡/); assert.doesNotMatch(s.g.feedback, /貨箱抬起/);
+});
+
+test('pivot clamps using each question length and larger effort visibly lifts', () => {
+  const s = setup(); s.g.start(); s.g.enter(1); ready(s);
+  for (let i = 0; i < 20; i++) s.g.move(-1);
+  assert.equal(s.g.pivot, 1); s.g.answer(); assert.equal(s.g.outcome, 'lift'); assert.match(s.g.feedback, /貨箱抬起/);
+  s.advance(1200); s.g.next(); assert.equal(s.g.current.length, 8);
+  for (let i = 0; i < 20; i++) s.g.move(1);
+  assert.equal(s.g.pivot, 7);
+});
+
+for (const [property, paper, expected] of [['acid', 'red', 'red'], ['acid', 'blue', 'red'], ['base', 'red', 'blue'], ['base', 'blue', 'blue'], ['neutral', 'red', 'red'], ['neutral', 'blue', 'blue']]) test(`litmus ${property}/${paper}`, () => assert.equal(litmus(property, paper), expected));
+for (const [score, tier] of [[0, 'learner'], [59, 'learner'], [60, 'master'], [79, 'master'], [80, 'expert'], [94, 'expert'], [95, 'king'], [100, 'king']]) test(`medal boundary ${score}`, () => {
+  assert.equal(medal(score).tier, tier); assert.equal(score >= 60, tier !== 'learner');
+});
+test('new food bank contrasts sealed/opened and dry/soaked with five distinct labeled SVGs', () => {
+  assert.deepEqual(stages[0].questions.map(q => q.answer), ['shelf', 'cold', 'shelf', 'cold', 'cold']);
+  const drawings = stages[0].questions.map(q => foodArt(q));
+  assert.equal(new Set(drawings).size, 5);
+  for (const [i, q] of stages[0].questions.entries()) {
+    assert.ok(q.condition.length > 15); assert.match(drawings[i], /<svg/); assert.match(drawings[i], /<title>/);
+    assert.ok(drawings[i].includes(q.name)); assert.doesNotMatch(drawings[i], /undefined|https?:/);
+  }
+});
+test('planet bank unique choices and each stage maximum is 25', () => {
+  assert.deepEqual(stages[3].questions.map(q => q.answer), ['水星', '木星', '土星']);
+  for (const q of stages[3].questions) { assert.equal(new Set(q.choices).size, 4); assert.ok(q.choices.includes(q.answer)); }
+  for (const s of stages) assert.equal(s.questions.reduce((sum, q) => sum + q.first, 0), 25);
+});
+
+test('accepted feedback waits indefinitely for next and early/double next cannot skip questions', () => {
+  const s = setup(); s.g.start(); s.g.begin(); s.g.answer('shelf');
+  assert.equal(s.g.next(), false); assert.equal(s.g.question, 0);
+  s.advance(86400000); assert.equal(s.g.phase, 'feedback'); assert.equal(s.g.question, 0);
+  assert.equal(s.g.next(), true); assert.equal(s.g.question, 1);
+  assert.equal(s.g.next(), false); assert.equal(s.g.question, 1);
+});
