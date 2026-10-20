@@ -38,7 +38,7 @@ function leverNumbers(q, pivot) {
 
 function tutorial(s) {
   let scene = '';
-  if (game.stage === 0) scene = `<div class="tutorial-food">${foodArt(stages[0].questions[0])}</div><p>看包裝、看狀態，再決定保存位置。</p>`;
+  if (game.stage === 0) scene = `<div class="tutorial-food">${foodArt(stages[0].questions[0])}</div><p>看包裝與食物狀態，判斷是否必須冷藏。</p><p>「可常溫保存」不代表「不能冷藏」。<br>這裡判斷的是冷藏的必要性。</p>`;
   if (game.stage === 1) scene = `<div class="lever-demo">${leverDiagram({ mass: 12, force: 6, length: 6 }, 2, 'balance')}</div>
     <div class="math">6 × 4 = 24 kgf·m<br>12 × 2 = 24 kgf·m</div><p>24＝24：力矩平衡，挑戰通過。<br>施力力矩較大：才會抬起貨箱。</p>`;
   if (game.stage === 2) scene = '<div class="paper-demo"><span class="paper blue to-red"></span> 遇酸 → 紅色<br><span class="paper red to-blue"></span> 遇鹼 → 藍色</div><p>中性：紅、藍試紙都維持原色</p>';
@@ -49,7 +49,7 @@ function tutorial(s) {
 }
 
 const planetClasses = { 水星: 'mercury', 金星: 'venus', 地球: 'earth', 火星: 'mars', 木星: 'jupiter', 土星: 'saturn', 天王星: 'uranus', 海王星: 'neptune' };
-const defaultHints = ['看清楚開封、含水與保存標示，再選位置。', '按左右移動支點，再按「用力！」測試。', '選試紙 → 點液體 → 判斷性質。', '點擊行星，發射科學光束！'];
+const defaultHints = ['依題目條件判斷是否必須冷藏，不是選擇要放哪裡。', '按左右移動支點，再按「用力！」測試。', '選試紙 → 點液體 → 判斷性質。', '點擊行星，發射科學光束！'];
 
 function feedback() {
   const success = ['feedback', 'practice-feedback'].includes(game.phase);
@@ -68,8 +68,10 @@ function play() {
   const heading = `<div class="question-line">${game.practicing ? '引導練習 · 不計分' : `第 ${game.question + 1}／${s.questions.length} 題`}</div>`;
   let content = '';
   if (game.stage === 0) {
-    content = `<div class="food-scene ${locked ? `food-slide to-${q.answer}` : ''}">${foodArt(q)}<h2>${q.name}</h2><p class="food-condition">${q.condition}</p></div>
-      <div class="choices two">${button('🧊 放冰箱', 'cold', locked)}${button('🪵 放常溫架', 'shelf', locked)}</div>`;
+    content = `<div class="food-scene ${locked ? 'food-confirmed' : ''}">${foodArt(q)}<h2>${q.name}</h2><p class="food-condition">${q.condition}</p></div>
+      <p class="food-task"><strong>依上述條件，是否必須冷藏？</strong></p>
+      <div class="choices two">${button('必須冷藏', 'required', locked)}${button('可常溫保存', 'room-ok', locked)}</div>
+      <p class="science-note">可常溫保存不代表禁止冷藏；本題只判斷是否必須冷藏。</p>`;
   }
   if (game.stage === 1) {
     // Feedback and controls precede the longer explanation, so taps have a visible result.

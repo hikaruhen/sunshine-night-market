@@ -70,17 +70,17 @@ test('old 45/70/55/55 boundaries cannot advance unanswered questions', () => {
   const s = setup(); s.g.start(); s.g.begin();
   for (const ms of [45000, 70000, 55000, 55000, 1000000]) s.advance(ms);
   assert.equal(s.g.stage, 0); assert.equal(s.g.question, 0); assert.equal(s.g.score, 0);
-  assert.equal(s.g.answer('shelf'), true); assert.equal(s.g.score, 5);
+  assert.equal(s.g.answer('room-ok'), true); assert.equal(s.g.score, 5);
   s.advance(750); assert.equal(s.g.question, 0); s.g.next(); assert.equal(s.g.question, 1);
 });
 
 test('no answering before explicit tutorial start; queued animation click cannot answer next question', () => {
   const s = setup(); s.g.start();
-  assert.equal(s.g.answer('shelf'), false);
+  assert.equal(s.g.answer('room-ok'), false);
   s.g.begin(); solve(s);
   // Clock advances without a render tick. Old feedback click must still be rejected.
-  let time = 0; const g = new Game(() => time); g.start(); g.begin(); g.answer('shelf'); time = 750;
-  assert.equal(g.answer('cold'), false); assert.equal(g.question, 0); assert.equal(g.score, 5);
+  let time = 0; const g = new Game(() => time); g.start(); g.begin(); g.answer('room-ok'); time = 750;
+  assert.equal(g.answer('required'), false); assert.equal(g.question, 0); assert.equal(g.score, 5);
   g.next(); assert.equal(g.question, 1);
 });
 
@@ -132,7 +132,7 @@ for (const [score, tier] of [[0, 'learner'], [59, 'learner'], [60, 'master'], [7
   assert.equal(medal(score).tier, tier); assert.equal(score >= 60, tier !== 'learner');
 });
 test('new food bank contrasts sealed/opened and dry/soaked with five distinct labeled SVGs', () => {
-  assert.deepEqual(stages[0].questions.map(q => q.answer), ['shelf', 'cold', 'shelf', 'cold', 'cold']);
+  assert.deepEqual(stages[0].questions.map(q => q.answer), ['room-ok', 'required', 'room-ok', 'required', 'required']);
   const drawings = stages[0].questions.map(q => foodArt(q));
   assert.equal(new Set(drawings).size, 5);
   for (const [i, q] of stages[0].questions.entries()) {
@@ -147,7 +147,7 @@ test('planet bank unique choices and each stage maximum is 25', () => {
 });
 
 test('accepted feedback waits indefinitely for next and early/double next cannot skip questions', () => {
-  const s = setup(); s.g.start(); s.g.begin(); s.g.answer('shelf');
+  const s = setup(); s.g.start(); s.g.begin(); s.g.answer('room-ok');
   assert.equal(s.g.next(), false); assert.equal(s.g.question, 0);
   s.advance(86400000); assert.equal(s.g.phase, 'feedback'); assert.equal(s.g.question, 0);
   assert.equal(s.g.next(), true); assert.equal(s.g.question, 1);

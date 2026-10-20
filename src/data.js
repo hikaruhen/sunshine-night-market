@@ -1,10 +1,10 @@
 export const stages = [
- {name:'細菌不要來',subject:'生物',icon:'🥛',tip:'同一種食物，開封、泡發後的保存方式可能不同。低溫能減緩細菌繁殖，不保證滅菌！',questions:[
- {name:'未開封保久乳',art:'milk-sealed',condition:'包裝完整、未開封；產品標示「可常溫保存」。',answer:'shelf',hint:'這盒保久乳經適當處理且包裝完整，標示允許未開封常溫保存。'},
- {name:'已開封保久乳',art:'milk-open',condition:'剛打開瓶蓋、尚未喝完；標示「開封後需冷藏」。',answer:'cold',hint:'保久乳開封後，原本的常溫保存條件已改變，請依標示冷藏。'},
- {name:'未開封乾香菇',art:'mushroom-dry',condition:'香菇乾燥、密封袋完整；標示「存放陰涼乾燥處」。',answer:'shelf',hint:'保持乾燥且密封完整的乾香菇，可依標示放在陰涼乾燥的常溫架。'},
- {name:'泡發後香菇',art:'mushroom-soaked',condition:'已泡水、瀝乾放入備料盒；暫不烹調，預計稍後使用。',answer:'cold',hint:'乾香菇泡發後含水量增加，暫不使用時應冷藏並儘快烹調。'},
- {name:'切開的西瓜',art:'watermelon-cut',condition:'已切成數片，切面覆蓋保鮮膜；暫不食用。',answer:'cold',hint:'切開後即使覆膜，仍需要冷藏並儘快食用，覆膜不等於滅菌。'}
+ {name:'細菌不要來',subject:'生物',icon:'🥛',tip:'開封、泡發後，是否必須冷藏可能不同。依保存條件判斷；低溫能減緩細菌繁殖，不保證滅菌！',questions:[
+ {name:'未開封保久乳',art:'milk-sealed',condition:'包裝完整、未開封；產品標示「可常溫保存」。',answer:'room-ok',hint:'這盒保久乳不必冷藏也可依標示保存。選「可常溫保存」；這不代表放冰箱就是錯誤。'},
+ {name:'已開封保久乳',art:'milk-open',condition:'剛打開瓶蓋、尚未喝完；標示「開封後需冷藏」。',answer:'required',hint:'開封後，原本可常溫保存的條件已改變；依這盒產品標示，必須冷藏。'},
+ {name:'未開封乾香菇',art:'mushroom-dry',condition:'香菇乾燥、密封袋完整；標示「存放陰涼乾燥處」。',answer:'room-ok',hint:'這袋乾香菇依標示可存放陰涼乾燥處，沒有必須冷藏的條件；不是判斷能不能放冰箱。'},
+ {name:'泡發後香菇',art:'mushroom-soaked',condition:'已泡水、瀝乾放入備料盒；暫不烹調，預計稍後使用。',answer:'required',hint:'泡發後含水量增加，這份暫不烹調的香菇需要冷藏，並儘快烹調。'},
+ {name:'切開的西瓜',art:'watermelon-cut',condition:'已切成數片，切面覆蓋保鮮膜；暫不食用。',answer:'required',hint:'這份切片西瓜暫不食用，需要冷藏並儘快食用；覆膜不等於滅菌。'}
  ].map(q=>({...q,first:5,retry:3}))},
  {name:'槓桿大力士',subject:'物理',icon:'📦',tip:'移動支點，比較兩邊力矩。相等是平衡，也能通過挑戰；施力力矩較大才會抬起貨箱。',questions:[
  {mass:12,force:6,length:6,first:5,retry:3}, {mass:18,force:6,length:8,first:10,retry:5}, {mass:10,force:6,length:8,first:10,retry:5}]},

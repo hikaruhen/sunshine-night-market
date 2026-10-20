@@ -11,8 +11,8 @@
 .food-condition{background:#efe8d8;border-radius:12px;padding:10px;text-align:left}
 .food-scene{padding:0}
 .food-scene h2{margin-bottom:10px}
-.food-slide .food-art{animation:foodRight .75s forwards}
-.food-slide.to-cold .food-art{animation:foodLeft .75s forwards}
+.food-confirmed .food-art{animation:answerNotice .3s ease-out}
+.food-task{text-align:center;margin:12px 0 4px}
 .pivot-position{font-size:14px;text-align:center;color:#4d675b;margin:10px 0}
 .stall-1 .feedback{margin:8px 0;min-height:60px}
 .stall-1 .wide{margin:4px 0 8px}
