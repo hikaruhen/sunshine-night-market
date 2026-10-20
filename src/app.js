@@ -7,6 +7,14 @@ const game = new Game();
 let muted = true, audio, last = '';
 const button = (text, action, extra = '') => `<button data-action="${action}" ${extra}>${text}</button>`;
 
+function answerButton(text, action, extra = '', className = '') {
+  const chosen = game.lastAnswer === action;
+  const wrong = chosen && game.answerState === 'wrong';
+  const correct = chosen && game.answerState === 'correct';
+  const marker = wrong ? '<span class="answer-marker" aria-hidden="true">✕ 再想想</span>' : correct ? '<span class="answer-marker" aria-hidden="true">✓ 答對了</span>' : '';
+  return button(`<span>${text}</span>${marker}`, action, `class="answer-button ${className} ${wrong ? 'answer-wrong' : correct ? 'answer-correct' : ''}" aria-label="${action === 'lift' ? '用力！' : text.replace(/<[^>]*>/g, '')}" aria-describedby="answer-feedback" ${extra}`);
+}
+
 function sound(ok) {
   if (muted) return;
   try {
@@ -53,13 +61,19 @@ const defaultHints = ['依題目條件判斷是否必須冷藏，不是選擇要
 
 function feedback() {
   const success = ['feedback', 'practice-feedback'].includes(game.phase);
-  return `<div class="feedback ${success ? 'success' : ''} ${game.outcome === 'insufficient' ? 'try-again' : ''}" role="status" aria-live="polite">${game.feedback || defaultHints[game.stage]}</div>`;
+  const wrong = game.answerState === 'wrong';
+  const attempts = game.practicing ? game.practiceAttempts : game.records[game.stage][game.question]?.attempts;
+  const title = wrong ? `✕ 還沒答對，${game.stage === 1 ? '請調整支點再試' : '請再選一次'}` : success ? `✓ ${game.stage === 1 ? '挑戰通過' : '答對了'}！請按「${continueLabel().replace(' →', '')}」繼續` : '';
+  return `<div id="answer-feedback" class="feedback ${success ? 'success' : ''} ${wrong ? 'try-again' : ''}" role="status" aria-live="polite" aria-atomic="true">${title ? `<strong class="feedback-title">${title}</strong>` : ''}<span>${game.feedback || defaultHints[game.stage]}</span>${wrong ? `<small class="feedback-attempt">第 ${attempts} 次嘗試・未得分，可以重試</small>` : ''}</div>`;
+}
+
+function continueLabel() {
+  return game.phase === 'practice-feedback' ? '進入正式挑戰 →' : game.question === stages[game.stage].questions.length - 1 ? (game.stage === 3 ? '查看獎章 →' : '前往下一攤 →') : '下一題 →';
 }
 
 function continueButton() {
   if (!['feedback', 'practice-feedback'].includes(game.phase)) return '';
-  const text = game.phase === 'practice-feedback' ? '進入正式挑戰 →' : game.question === stages[game.stage].questions.length - 1 ? (game.stage === 3 ? '查看獎章 →' : '前往下一攤 →') : '下一題 →';
-  return button(text, 'next', `class="primary wide continue" ${game.canContinue ? '' : 'disabled'}`);
+  return button(continueLabel(), 'next', `class="primary wide continue" ${game.canContinue ? '' : 'disabled'}`);
 }
 
 function play() {
@@ -70,14 +84,14 @@ function play() {
   if (game.stage === 0) {
     content = `<div class="food-scene ${locked ? 'food-confirmed' : ''}">${foodArt(q)}<h2>${q.name}</h2><p class="food-condition">${q.condition}</p></div>
       <p class="food-task"><strong>依上述條件，是否必須冷藏？</strong></p>
-      <div class="choices two">${button('必須冷藏', 'required', locked)}${button('可常溫保存', 'room-ok', locked)}</div>
+      ${feedback()}<div class="choices two">${answerButton('必須冷藏', 'required', locked)}${answerButton('可常溫保存', 'room-ok', locked)}</div>${continueButton()}
       <p class="science-note">可常溫保存不代表禁止冷藏；本題只判斷是否必須冷藏。</p>`;
   }
   if (game.stage === 1) {
     // Feedback and controls precede the longer explanation, so taps have a visible result.
     content = `${leverDiagram(q, game.pivot, game.outcome || '')}${feedback()}${continueButton()}
       <div class="choices two">${button('← 支點向左', 'left', locked || game.pivot === 1 ? 'disabled' : '')}${button('支點向右 →', 'right', locked || game.pivot === q.length - 1 ? 'disabled' : '')}</div>
-      ${button('用力！', 'lift', `class="primary wide" ${locked}`)}${leverNumbers(q, game.pivot)}
+      ${answerButton('用力！', 'lift', locked, 'primary wide')}${leverNumbers(q, game.pivot)}
       <p class="science-note">地球表面附近，1 kg 物體重量約 1 kgf。理想模型不計槓桿重量與摩擦。力矩相等時平衡通過；施力力矩較大才抬起。</p>`;
   }
   if (game.stage === 2) {
@@ -86,17 +100,17 @@ function play() {
       ${button('藍色石蕊試紙', 'blue', `class="blue-choice ${game.selected === 'blue' ? 'selected' : ''}" ${locked}`)}</div>
       ${button(`<span class="beaker">🧪</span><span>${game.selected ? '點液體檢測' : '先選擇一張試紙'}</span>`, 'dip', `class="liquid" ${locked || !game.selected ? 'disabled' : ''}`)}
       <div class="observations">${['red', 'blue'].map(p => game.observations[p] ? `<span><i class="paper ${game.observations[p]}"></i>${p === 'red' ? '紅' : '藍'}試紙 → ${game.observations[p] === 'red' ? '紅' : '藍'}色${game.observations[p] === p ? '（未變色）' : '（變色）'}</span>` : '').join('') || '檢測可重複，不影響分數'}</div>
-      <div class="choices three">${button('酸性', 'acid', locked)}${button('中性', 'neutral', locked)}${button('鹼性', 'base', locked)}</div>
+      ${feedback()}<div class="choices three">${answerButton('酸性', 'acid', locked)}${answerButton('中性', 'neutral', locked)}${answerButton('鹼性', 'base', locked)}</div>${continueButton()}
       <p class="science-note">沒有變色不一定是中性；可換另一張試紙。這是模擬檢測，請勿飲用實驗液體。</p>`;
   }
-  if (game.stage === 3) content = `<h2>${q.name}</h2><div class="planet-grid ${locked ? 'hit' : ''}">${q.choices.map(p => button(`<span class="planet ${planetClasses[p]}"></span><span>${p}</span>`, p, locked)).join('')}</div>`;
-  return heading + content + (game.stage === 1 ? '' : feedback() + continueButton());
+  if (game.stage === 3) content = `<h2>${q.name}</h2>${feedback()}<div class="planet-grid ${locked ? 'hit' : ''}">${q.choices.map(p => answerButton(`<span class="planet ${planetClasses[p]}"></span><span>${p}</span>`, p, locked)).join('')}</div>${continueButton()}`;
+  return heading + content;
 }
 
 function render() {
   game.tick();
   // No wall-clock field in the render key: idle time never replaces a pressed button.
-  const key = JSON.stringify([game.phase, game.stage, game.question, game.pivot, game.feedback, game.selected, game.observations, muted, game.practicing, game.outcome, game.reaction, game.canContinue]);
+  const key = JSON.stringify([game.phase, game.stage, game.question, game.pivot, game.feedback, game.selected, game.observations, muted, game.practicing, game.outcome, game.reaction, game.canContinue, game.answerState, game.lastAnswer]);
   if (key === last) return;
   last = key;
   // Preserve the focused control through synchronous redraws for keyboard users.
@@ -140,6 +154,18 @@ app.addEventListener('click', event => {
     }
   } else sound(game.answer(action));
   render();
+  if (target.classList.contains('answer-button')) {
+    const message = document.querySelector('#answer-feedback');
+    const rect = message?.getBoundingClientRect();
+    const controls = [...app.querySelectorAll('.answer-button, .continue')].map(control => control.getBoundingClientRect());
+    const bottom = Math.max(rect?.bottom ?? 0, ...controls.map(bounds => bounds.bottom));
+    const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    if (rect && (rect.top < 12 || bottom > window.innerHeight - 12)) {
+      // Keep the retry explanation and choices together when they fit on screen.
+      if (bottom - rect.top <= window.innerHeight - 24) window.scrollBy({ top: rect.top - 12, behavior });
+      else message.scrollIntoView({ block: 'nearest', behavior });
+    }
+  }
 });
 
 document.addEventListener('visibilitychange', render);

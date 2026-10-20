@@ -153,3 +153,37 @@ test('accepted feedback waits indefinitely for next and early/double next cannot
   assert.equal(s.g.next(), true); assert.equal(s.g.question, 1);
   assert.equal(s.g.next(), false); assert.equal(s.g.question, 1);
 });
+
+for (const stage of [0, 1, 2, 3]) test(`stage ${stage + 1} repeated wrong answers stay actionable and clear after retry/next`, () => {
+  const s = setup(); s.g.start(); s.g.enter(stage); ready(s);
+  const wrong = ['required', 'lift', 'base', '金星'][stage];
+  if (stage === 1) s.g.pivot = s.g.current.length - 1;
+  const reaction = s.g.reaction;
+  for (let i = 1; i <= 2; i++) {
+    assert.equal(s.g.answer(wrong), false);
+    assert.equal(s.g.answerState, 'wrong'); assert.equal(s.g.lastAnswer, wrong);
+    assert.equal(s.g.reaction, reaction + i); assert.equal(s.g.records[stage][0].attempts, i);
+    assert.equal(s.g.phase, 'play'); assert.equal(s.g.score, 0); assert.equal(s.g.question, 0);
+    assert.equal(s.g.canContinue, false);
+  }
+  if (stage === 1) { s.g.move(-20); assert.equal(s.g.answerState, null); }
+  const correct = stage === 1 ? 'lift' : s.g.current.answer;
+  assert.equal(s.g.answer(correct), true);
+  assert.equal(s.g.answerState, 'correct'); assert.equal(s.g.lastAnswer, correct);
+  assert.equal(s.g.score, 3);
+  s.advance(1200); assert.equal(s.g.next(), true);
+  assert.equal(s.g.answerState, null); assert.equal(s.g.lastAnswer, null);
+  s.g.start(); assert.equal(s.g.answerState, null); assert.equal(s.g.lastAnswer, null);
+});
+
+test('practice failures have distinct attempt counts, remain unscored and reset before formal challenge', () => {
+  const s = setup(); s.g.start(); s.g.enter(1); s.g.begin();
+  s.g.answer('lift'); s.g.answer('lift');
+  assert.equal(s.g.practiceAttempts, 2); assert.equal(s.g.answerState, 'wrong');
+  assert.equal(s.g.score, 0); assert.equal(s.g.phase, 'play');
+  s.g.move(-1); assert.equal(s.g.answerState, null);
+  s.g.answer('lift'); assert.equal(s.g.answerState, 'correct');
+  s.advance(1200); s.g.next();
+  assert.equal(s.g.answerState, null); assert.equal(s.g.lastAnswer, null);
+  assert.equal(s.g.records[1][0].attempts, 0);
+});

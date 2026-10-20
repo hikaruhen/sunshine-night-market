@@ -32,6 +32,7 @@ node scripts/serve.mjs --dist
 - IMPLEMENTATION_PLAN.md：架構、槓桿題庫與計時決策。
 - ACCEPTANCE_TESTS.md：驗收項目。
 - TEST_REPORT.md：實際測試結果，區分單元與瀏覽器驗證。
+- RETRY_UX_REVIEW.md：錯答／重試體驗的獨立複驗步驟。
 - KNOWN_ISSUES.md：未驗證項目與限制。
 - src/data.js：集中題庫、分數、秒數與科學函式。
 - src/engine.js：可注入時鐘的遊戲狀態機。

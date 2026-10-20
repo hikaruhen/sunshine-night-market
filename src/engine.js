@@ -18,6 +18,9 @@ export class Game {
     this.feedback = '';
     this.outcome = null;
     this.reaction = 0;
+    this.answerState = null;
+    this.lastAnswer = null;
+    this.practiceAttempts = 0;
     this.tutorialStarted = 0;
   }
 
@@ -29,6 +32,9 @@ export class Game {
     this.observations = {};
     this.feedback = '';
     this.outcome = null;
+    this.answerState = null;
+    this.lastAnswer = null;
+    this.practiceAttempts = 0;
     this.question = 0;
     this.practicing = stage === 1;
     this.unlock = 0;
@@ -52,6 +58,8 @@ export class Game {
 
   next() {
     if (!this.canContinue) return false;
+    this.answerState = null;
+    this.lastAnswer = null;
     if (this.phase === 'practice-feedback') {
       this.practicing = false;
       this.phase = 'play';
@@ -77,6 +85,8 @@ export class Game {
     if (this.phase !== 'play' || this.stage !== 1) return;
     this.pivot = Math.max(1, Math.min(this.current.length - 1, this.pivot + delta));
     this.outcome = null;
+    this.answerState = null;
+    this.lastAnswer = null;
     this.feedback = `支點距貨箱 ${this.pivot} m。按「用力！」測試。`;
   }
 
@@ -94,8 +104,11 @@ export class Game {
     this.outcome = this.stage === 1 ? leverOutcome(q, this.pivot) : null;
     const correct = this.stage === 1 ? this.outcome !== 'insufficient' : value === q.answer;
     this.reaction++;
+    this.answerState = correct ? 'correct' : 'wrong';
+    this.lastAnswer = value ?? (this.stage === 1 ? 'lift' : null);
     const leverMessage = this.outcome === 'balance' ? '力矩平衡，挑戰通過！' : '施力力矩較大，貨箱抬起，挑戰通過！';
     if (this.practicing) {
+      this.practiceAttempts++;
       if (correct) {
         this.phase = 'practice-feedback';
         this.unlock = this.now() + 1200;
