@@ -108,7 +108,7 @@ function feedback() {
 }
 
 function continueLabel() {
-  return game.phase === 'practice-feedback' ? '進入正式挑戰 →' : game.question === stages[game.stage].questions.length - 1 ? (game.stage === 3 ? '查看獎章 →' : '前往下一攤 →') : '下一題 →';
+  return game.phase === 'practice-feedback' ? '進入正式挑戰 →' : game.question === stages[game.stage].questions.length - 1 ? (game.completed.every(Boolean) ? '查看獎章 →' : '返回攤位選單 →') : '下一題 →';
 }
 
 function continueButton() {
@@ -156,7 +156,16 @@ function render() {
   if (game.phase === 'home') {
     app.innerHTML = `<section class="home">
       ${titleMarkup(true)}<p class="lead">逛一圈夜市，帶走一身科學超能力。</p><div class="market-art"><span>🥛</span><span>📦</span><span>🧪</span><span>🪐</span></div>
-      <p>四個攤位・不限時間<br>滿分 100 分，60 分通過</p>${button('開始挑戰 →', 'start', 'class="primary wide"')}</section>`;
+      <p>四個攤位・自由選關・不限時間<br>滿分 100 分，60 分通過</p>${button('開始遊戲 →', 'start', 'class="primary wide"')}</section>`;
+  } else if (game.phase === 'market') {
+    const descriptions = ['食品冷藏判斷', '移動支點，挑戰力矩', '紅藍試紙，探索酸鹼', '認識行星與太陽系'];
+    const scenery = ['🥛 ❄️ 🥬', '📦 ⚖️ 📏', '🧪 🔴 🔵', '☀️ 🌍 🪐'];
+    app.innerHTML = `<section class="market-menu"><header><span class="brand">${APP_TITLE}</span></header><h1>今天想逛哪一攤？</h1><p>自由選擇，每攤最高 25 分。</p><div class="market-summary">已完成 ${game.completed.filter(Boolean).length}／4 攤 · 累計 ${game.score}／100 分</div><div class="stall-grid">${stages.map((s, i) => {
+      const done = game.completed[i];
+      const points = game.records[i].reduce((sum, r) => sum + r.points, 0);
+      const visited = game.records[i].some(r => r.attempts);
+      return button(`<span class="menu-awning" aria-hidden="true"></span><span class="menu-scenery" aria-hidden="true">${scenery[i]}</span><strong>${s.subject}</strong><span class="menu-name">${s.name}</span><span class="menu-description">${descriptions[i]}</span><span class="menu-status">${done ? `✓ 已完成 · ${points}／25 分` : visited ? `繼續挑戰 · ${points} 分 →` : '進入攤位 →'}</span>`, `choose-${i}`, `class="menu-stall menu-stall-${i}" ${done ? 'disabled' : ''}`);
+    }).join('')}</div><p class="subtle">完成一攤後回到這裡；四攤完成即可領取獎章。</p></section>`;
   } else if (game.phase === 'result') {
     const m = medal(game.score);
     app.innerHTML = `<section class="result"><div class="eyebrow">四個攤位，挑戰完成！</div>${titleMarkup()}<div class="badge ${m.tier}"><span>${m.symbol}</span><strong>${m.name}</strong></div>
@@ -165,8 +174,9 @@ function render() {
     const s = stages[game.stage];
     const testing = game.isTesting || (game.stage === 2 && game.phase === 'tutorial' && demoExperiment.busy);
     app.innerHTML = `<header><span class="brand">🏮 ${APP_TITLE}</span>${button(muted ? '🔇 靜音' : '🔊 音效', 'mute', `class="sound" aria-label="切換靜音" ${testing ? 'disabled' : ''}`)}</header>
-      <div class="hud"><span>${game.stage + 1}／4 · ${s.subject}</span><span class="untimed">不限時間</span><span>${game.score} 分</span></div>
-      <div class="progress">${stages.map((_, i) => `<i class="${i <= game.stage ? 'on' : ''}"></i>`).join('')}</div>
+      <div class="hud"><span>${s.subject}</span><span class="untimed">不限時間</span><span>${game.score} 分</span></div>
+      ${button('← 返回攤位選單', 'market', `class="market-back" ${testing || (['feedback', 'practice-feedback'].includes(game.phase) && !game.canContinue) ? 'disabled' : ''}`)}
+      <div class="progress" aria-label="已完成 ${game.completed.filter(Boolean).length} 攤">${stages.map((_, i) => `<i class="${game.completed[i] ? 'on' : ''}"></i>`).join('')}</div>
       <section class="stall stall-${game.stage}"><div class="awning"></div><h1 class="stall-title">${s.icon} ${s.name}</h1>${game.phase === 'tutorial' ? tutorial(s) : play()}</section>`;
   }
   if (focusAction) {
@@ -179,7 +189,10 @@ app.addEventListener('click', event => {
   const target = event.target.closest('button');
   if (!target || target.disabled) return;
   const action = target.dataset.action;
+  const previousPhase = game.phase;
   if (action === 'start' || action === 'restart') { game.start(); resetDemo(); }
+  else if (action.startsWith('choose-')) { if (game.choose(Number(action.slice(7)))) resetDemo(); }
+  else if (action === 'market') { if (!demoExperiment.busy) game.market(); }
   else if (action === 'begin') { if (!(game.stage === 2 && demoExperiment.busy)) game.begin(); }
   else if (action === 'next') game.next();
   else if (action === 'mute') muted = !muted;
@@ -198,6 +211,7 @@ app.addEventListener('click', event => {
     }
   } else sound(game.answer(action));
   render();
+  if (game.phase !== previousPhase && ['market', 'tutorial', 'result'].includes(game.phase)) window.scrollTo({ top: 0, behavior: 'instant' });
   if (target.classList.contains('answer-button')) {
     const message = document.querySelector('#answer-feedback');
     const rect = message?.getBoundingClientRect();

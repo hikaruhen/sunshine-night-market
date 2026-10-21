@@ -88,7 +88,7 @@ test('stage transition and restart discard a pending sample with no late write',
   assert.deepEqual(game.observations, {}); assert.equal(game.experiment.sample, null);
   game.enter(2); game.begin(); game.select('red'); game.dip();
   game.start(); now += 100000; game.tick();
-  assert.equal(game.stage, 0); assert.equal(game.score, 0); assert.equal(game.selected, null);
+  assert.equal(game.stage, -1); assert.equal(game.phase, 'market'); assert.equal(game.score, 0); assert.equal(game.selected, null);
   assert.deepEqual(game.observations, {}); assert.equal(game.experiment.sample, null);
   assert.notEqual(game.experiment, oldExperiment);
 });

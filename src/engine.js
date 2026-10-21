@@ -26,7 +26,25 @@ export class Game {
     this.tutorialStarted = 0;
   }
 
-  start() { this.reset(); this.enter(0); }
+  start() { this.reset(); this.phase = 'market'; }
+
+  get completed() { return this.records.map(records => records.every(r => r.status === 'completed')); }
+
+  choose(stage) {
+    if (this.phase !== 'market' || !Number.isInteger(stage) || stage < 0 || stage >= stages.length || this.completed[stage]) return false;
+    this.enter(stage);
+    this.question = this.records[stage].findIndex(r => r.status !== 'completed');
+    this.resetPivot();
+    return true;
+  }
+
+  market() {
+    if (this.isTesting || (['feedback', 'practice-feedback'].includes(this.phase) && !this.canContinue)) return false;
+    this.experiment.reset();
+    this.phase = this.completed.every(Boolean) ? 'result' : 'market';
+    this.stage = -1;
+    return true;
+  }
 
   enter(stage) {
     this.stage = stage;
@@ -82,7 +100,7 @@ export class Game {
       this.experiment.reset();
       this.feedback = '';
       this.outcome = null;
-      if (this.question === stages[this.stage].questions.length) this.enter(this.stage + 1);
+      if (this.question === stages[this.stage].questions.length) this.market();
       else { this.phase = 'play'; this.resetPivot(); }
     }
     return true;

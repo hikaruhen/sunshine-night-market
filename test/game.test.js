@@ -30,9 +30,41 @@ function solve(s, retry = false) {
   else g.answer(g.current.answer);
 }
 
-for (const retry of [false, true]) test(`four stages ${retry ? 'retry' : 'first'} scoring, duplicate locks and reset`, () => {
+function permutations(values) {
+  return values.length ? values.flatMap(v => permutations(values.filter(x => x !== v)).map(rest => [v, ...rest])) : [[]];
+}
+for (const order of permutations([0, 1, 2, 3])) test(`free choice ${order.join(',')} completes all stalls once for 100 points`, () => {
   const s = setup(); s.g.start();
+  assert.equal(s.g.phase, 'market');
+  assert.equal(s.g.choose(-1), false);
+  assert.equal(s.g.choose(4), false);
+  for (const stage of order) {
+    assert.equal(s.g.choose(stage), true);
+    assert.equal(s.g.choose(stage), false);
+    ready(s);
+    for (const q of stages[stage].questions) { solve(s); s.advance(1200); s.g.next(); }
+    assert.equal(s.g.completed[stage], true);
+    assert.equal(s.g.choose(stage), false);
+  }
+  assert.equal(s.g.phase, 'result'); assert.equal(s.g.score, 100);
+  s.g.start(); assert.equal(s.g.phase, 'market'); assert.equal(s.g.score, 0);
+  assert.deepEqual(s.g.completed, [false, false, false, false]);
+});
+
+test('returning to menu preserves earned points and resumes at first unanswered question', () => {
+  const s = setup(); s.g.start(); s.g.choose(0); s.g.begin(); solve(s);
+  assert.equal(s.g.market(), false);
+  s.advance(1200); assert.equal(s.g.market(), true); assert.equal(s.g.score, 5);
+  s.g.choose(2); s.g.begin(); s.g.select('blue'); s.g.dip();
+  assert.equal(s.g.market(), false);
+  s.advance(2400); assert.equal(s.g.market(), true);
+  s.g.choose(0); assert.equal(s.g.question, 1); s.g.begin(); solve(s); assert.equal(s.g.score, 10);
+});
+
+for (const retry of [false, true]) test(`four stages ${retry ? 'retry' : 'first'} scoring, duplicate locks and reset`, () => {
+  const s = setup(); s.g.start(); s.g.choose(0);
   for (let stage = 0; stage < 4; stage++) {
+    if (stage) assert.equal(s.g.choose(stage), true);
     ready(s);
     for (let i = 0; i < stages[stage].questions.length; i++) {
       solve(s, retry);
@@ -46,7 +78,7 @@ for (const retry of [false, true]) test(`four stages ${retry ? 'retry' : 'first'
   }
   assert.equal(s.g.phase, 'result');
   assert.equal(s.g.score, retry ? 54 : 100);
-  s.g.start();
+  s.g.start(); s.g.choose(0);
   assert.equal(s.g.stage, 0); assert.equal(s.g.phase, 'tutorial'); assert.equal(s.g.score, 0);
   assert.equal(s.g.outcome, null); assert.equal(s.g.selected, null);
   assert.deepEqual(s.g.observations, {});
@@ -54,8 +86,9 @@ for (const retry of [false, true]) test(`four stages ${retry ? 'retry' : 'first'
 });
 
 test('24 hours idle in every tutorial and active stage never times out or changes score', () => {
-  const s = setup(); s.g.start();
+  const s = setup(); s.g.start(); s.g.choose(0);
   for (let stage = 0; stage < 4; stage++) {
+    if (stage) assert.equal(s.g.choose(stage), true);
     s.advance(86400000);
     assert.equal(s.g.phase, 'tutorial'); assert.equal(s.g.stage, stage);
     ready(s);
@@ -67,7 +100,7 @@ test('24 hours idle in every tutorial and active stage never times out or change
 });
 
 test('old 45/70/55/55 boundaries cannot advance unanswered questions', () => {
-  const s = setup(); s.g.start(); s.g.begin();
+  const s = setup(); s.g.start(); s.g.choose(0); s.g.begin();
   for (const ms of [45000, 70000, 55000, 55000, 1000000]) s.advance(ms);
   assert.equal(s.g.stage, 0); assert.equal(s.g.question, 0); assert.equal(s.g.score, 0);
   assert.equal(s.g.answer('room-ok'), true); assert.equal(s.g.score, 5);
@@ -75,11 +108,11 @@ test('old 45/70/55/55 boundaries cannot advance unanswered questions', () => {
 });
 
 test('no answering before explicit tutorial start; queued animation click cannot answer next question', () => {
-  const s = setup(); s.g.start();
+  const s = setup(); s.g.start(); s.g.choose(0);
   assert.equal(s.g.answer('room-ok'), false);
   s.g.begin(); solve(s);
   // Clock advances without a render tick. Old feedback click must still be rejected.
-  let time = 0; const g = new Game(() => time); g.start(); g.begin(); g.answer('room-ok'); time = 750;
+  let time = 0; const g = new Game(() => time); g.start(); g.choose(0); g.begin(); g.answer('room-ok'); time = 750;
   assert.equal(g.answer('required'), false); assert.equal(g.question, 0); assert.equal(g.score, 5);
   g.next(); assert.equal(g.question, 1);
 });
@@ -99,7 +132,7 @@ for (const [i, q] of [practice, ...stages[1].questions].entries()) test(`lever $
 });
 
 test('practice feedback retains pivot, equality passes without lifting and gives zero points', () => {
-  const s = setup(); s.g.start(); s.g.enter(1); s.g.begin();
+  const s = setup(); s.g.start(); s.g.choose(0); s.g.enter(1); s.g.begin();
   assert.equal(s.g.answer(), false); assert.equal(s.g.outcome, 'insufficient');
   s.g.move(-1); assert.equal(s.g.pivot, 2); assert.equal(s.g.answer(), true);
   assert.equal(s.g.phase, 'practice-feedback'); assert.equal(s.g.pivot, 2);
@@ -110,7 +143,7 @@ test('practice feedback retains pivot, equality passes without lifting and gives
 });
 
 test('formal equality succeeds with correct score; insufficient attempts give repeatable reactions and retry score', () => {
-  const s = setup(); s.g.start(); s.g.enter(1); ready(s);
+  const s = setup(); s.g.start(); s.g.choose(0); s.g.enter(1); ready(s);
   assert.equal(s.g.answer(), false); const reaction = s.g.reaction;
   assert.equal(s.g.answer(), false); assert.equal(s.g.reaction, reaction + 1); assert.equal(s.g.score, 0);
   s.g.move(-1); assert.equal(s.g.answer(), true);
@@ -119,7 +152,7 @@ test('formal equality succeeds with correct score; insufficient attempts give re
 });
 
 test('pivot clamps using each question length and larger effort visibly lifts', () => {
-  const s = setup(); s.g.start(); s.g.enter(1); ready(s);
+  const s = setup(); s.g.start(); s.g.choose(0); s.g.enter(1); ready(s);
   for (let i = 0; i < 20; i++) s.g.move(-1);
   assert.equal(s.g.pivot, 1); s.g.answer(); assert.equal(s.g.outcome, 'lift'); assert.match(s.g.feedback, /貨箱抬起/);
   s.advance(1200); s.g.next(); assert.equal(s.g.current.length, 8);
@@ -147,7 +180,7 @@ test('planet bank unique choices and each stage maximum is 25', () => {
 });
 
 test('accepted feedback waits indefinitely for next and early/double next cannot skip questions', () => {
-  const s = setup(); s.g.start(); s.g.begin(); s.g.answer('room-ok');
+  const s = setup(); s.g.start(); s.g.choose(0); s.g.begin(); s.g.answer('room-ok');
   assert.equal(s.g.next(), false); assert.equal(s.g.question, 0);
   s.advance(86400000); assert.equal(s.g.phase, 'feedback'); assert.equal(s.g.question, 0);
   assert.equal(s.g.next(), true); assert.equal(s.g.question, 1);
@@ -155,7 +188,7 @@ test('accepted feedback waits indefinitely for next and early/double next cannot
 });
 
 for (const stage of [0, 1, 2, 3]) test(`stage ${stage + 1} repeated wrong answers stay actionable and clear after retry/next`, () => {
-  const s = setup(); s.g.start(); s.g.enter(stage); ready(s);
+  const s = setup(); s.g.start(); s.g.choose(0); s.g.enter(stage); ready(s);
   const wrong = ['required', 'lift', 'base', '金星'][stage];
   if (stage === 1) s.g.pivot = s.g.current.length - 1;
   const reaction = s.g.reaction;
@@ -173,11 +206,11 @@ for (const stage of [0, 1, 2, 3]) test(`stage ${stage + 1} repeated wrong answer
   assert.equal(s.g.score, 3);
   s.advance(1200); assert.equal(s.g.next(), true);
   assert.equal(s.g.answerState, null); assert.equal(s.g.lastAnswer, null);
-  s.g.start(); assert.equal(s.g.answerState, null); assert.equal(s.g.lastAnswer, null);
+  s.g.start(); s.g.choose(0); assert.equal(s.g.answerState, null); assert.equal(s.g.lastAnswer, null);
 });
 
 test('practice failures have distinct attempt counts, remain unscored and reset before formal challenge', () => {
-  const s = setup(); s.g.start(); s.g.enter(1); s.g.begin();
+  const s = setup(); s.g.start(); s.g.choose(0); s.g.enter(1); s.g.begin();
   s.g.answer('lift'); s.g.answer('lift');
   assert.equal(s.g.practiceAttempts, 2); assert.equal(s.g.answerState, 'wrong');
   assert.equal(s.g.score, 0); assert.equal(s.g.phase, 'play');
