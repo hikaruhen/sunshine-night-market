@@ -87,8 +87,11 @@ function tutorial(s) {
       <div class="choices two">${paperButton('red', demoExperiment.paper, busy, true)}${paperButton('blue', demoExperiment.paper, busy, true)}</div>
       ${experimentMarkup(demoExperiment, demoLiquid, false, true)}<p class="science-note">先看原色；末端進入液面後，才觀察變色或不變色。</p>`;
   }
-  if (game.stage === 3) scene = '<div class="demo-planets">☀️　🌑　🟠　🪐</div><p>最近：水星 · 最大：木星 · 環最顯著：土星</p>';
-  return `<div class="tutorial"><div class="eyebrow">先看示範 · 不限時間</div>${scene}<h2>${s.tip}</h2>
+  if (game.stage === 3) scene = '<div class="demo-planets">☀️　🌑　🟠　🪐</div>';
+  const tip = game.stage === 3
+    ? '<div class="planet-knowledge"><p>水星離太陽最近；</p><p>木星最大；</p><p>土星的環最顯著。</p><p>其他巨行星也有環喔！</p></div>'
+    : `<h2>${s.tip}</h2>`;
+  return `<div class="tutorial"><div class="eyebrow">先看示範 · 不限時間</div>${scene}${tip}
     ${button(game.stage === 1 ? '開始練習 →' : '我準備好了 →', 'begin', `class="primary wide" ${game.stage === 2 && demoExperiment.busy ? 'disabled' : ''}`)}
     </div>`;
 }

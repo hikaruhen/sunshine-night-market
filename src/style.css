@@ -72,6 +72,7 @@ header{gap:8px}.brand{font-size:14px;line-height:1.5;min-width:0}.sound{flex-shr
 .observation-card{display:block;width:100%;padding:7px 9px;background:#f0ebdf;border-radius:8px;line-height:1.6}
 .mini-paper{display:inline-block;width:9px;height:25px;vertical-align:middle;margin:0 4px;border:1px solid #715a60;border-radius:2px}
 .demo-fluids{grid-template-columns:repeat(3,minmax(0,1fr))}
+.planet-knowledge{font-size:1.25rem;font-weight:700;line-height:1.6;margin:0 0 20px}.planet-knowledge p{margin:0 0 10px}.planet-knowledge p:last-child{margin-top:20px;font-size:1rem;font-weight:400}
 .litmus-guide{width:100%;border-collapse:collapse;table-layout:fixed;font-size:14px;line-height:1.6;margin:0 0 14px;background:#fffdf5}
 .litmus-guide caption{font-size:20px;font-weight:800;color:#28433d;margin-bottom:12px}
 .litmus-guide th,.litmus-guide td{padding:9px 4px;border:1px solid #bacaba;overflow-wrap:anywhere}
