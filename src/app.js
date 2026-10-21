@@ -1,11 +1,39 @@
-import { stages, torque, litmus, medal } from './data.js';
+import { stages, torque, medal } from './data.js';
 import { Game } from './engine.js';
 import { foodArt } from './food-art.js';
+import { APP_TITLE } from './config.js';
+import { LitmusExperiment, litmusMessage, litmusScene, paperName } from './litmus.js';
 
 const app = document.querySelector('#app');
 const game = new Game();
 let muted = true, audio, last = '';
+let demoExperiment, demoProperty, demoLiquid;
+function resetDemo() {
+  demoExperiment = new LitmusExperiment();
+  demoExperiment.select('blue');
+  demoProperty = 'acid';
+  demoLiquid = '檸檬汁';
+}
+resetDemo();
 const button = (text, action, extra = '') => `<button data-action="${action}" ${extra}>${text}</button>`;
+
+function titleMarkup() {
+  return `<h1 class="school-title" aria-label="${APP_TITLE}"><span class="school-name">內湖國中</span><span class="market-name">陽光科學夜市</span></h1>`;
+}
+
+function paperButton(paper, selected, disabled, demo = false) {
+  const name = `${paperName(paper)}石蕊試紙`;
+  return button(`<span class="paper-choice-preview paper-${paper}" aria-hidden="true"></span><span>${name}</span>`, `${demo ? 'demo-' : ''}${paper}`,
+    `class="paper-choice ${paper}-choice ${selected === paper ? 'selected' : ''}" aria-label="${demo ? '示範' : ''}${name}" aria-pressed="${selected === paper}" ${disabled ? 'disabled' : ''}`);
+}
+
+function experimentMarkup(experiment, name, disabled, demo = false) {
+  const snapshot = experiment.snapshot();
+  const label = snapshot.busy ? '檢測中，請稍候' : snapshot.paper ? '點液體檢測' : '先選擇一張試紙';
+  return `${button(`${litmusScene(snapshot, name)}<span class="sample-callout">${label}</span>`, demo ? 'demo-dip' : 'dip',
+    `class="sample-button" aria-label="${demo ? '示範：' : ''}${label}" ${disabled || !snapshot.paper || snapshot.busy ? 'disabled' : ''}`)}
+    <p class="litmus-status" role="status" aria-live="polite">${litmusMessage(snapshot)}</p>`;
+}
 
 function answerButton(text, action, extra = '', className = '') {
   const chosen = game.lastAnswer === action;
@@ -49,10 +77,16 @@ function tutorial(s) {
   if (game.stage === 0) scene = `<div class="tutorial-food">${foodArt(stages[0].questions[0])}</div><p>看包裝與食物狀態，判斷是否必須冷藏。</p><p>「可常溫保存」不代表「不能冷藏」。<br>這裡判斷的是冷藏的必要性。</p>`;
   if (game.stage === 1) scene = `<div class="lever-demo">${leverDiagram({ mass: 12, force: 6, length: 6 }, 2, 'balance')}</div>
     <div class="math">6 × 4 = 24 kgf·m<br>12 × 2 = 24 kgf·m</div><p>24＝24：力矩平衡，挑戰通過。<br>施力力矩較大：才會抬起貨箱。</p>`;
-  if (game.stage === 2) scene = '<div class="paper-demo"><span class="paper blue to-red"></span> 遇酸 → 紅色<br><span class="paper red to-blue"></span> 遇鹼 → 藍色</div><p>中性：紅、藍試紙都維持原色</p>';
+  if (game.stage === 2) {
+    const busy = demoExperiment.busy;
+    scene = `<p>示範不計分：先選試紙，再點杯中液體。</p>
+      <div class="choices demo-fluids">${button('檸檬汁', 'demo-acid', busy ? 'disabled' : '')}${button('小蘇打水', 'demo-base', busy ? 'disabled' : '')}${button('純水', 'demo-neutral', busy ? 'disabled' : '')}</div>
+      <div class="choices two">${paperButton('red', demoExperiment.paper, busy, true)}${paperButton('blue', demoExperiment.paper, busy, true)}</div>
+      ${experimentMarkup(demoExperiment, demoLiquid, false, true)}<p class="science-note">先看原色；末端進入液面後，才觀察變色或不變色。</p>`;
+  }
   if (game.stage === 3) scene = '<div class="demo-planets">☀️　🌑　🟠　🪐</div><p>最近：水星 · 最大：木星 · 環最顯著：土星</p>';
   return `<div class="tutorial"><div class="eyebrow">先看示範 · 不限時間</div>${scene}<h2>${s.tip}</h2>
-    ${button(game.stage === 1 ? '開始練習 →' : '我準備好了 →', 'begin', 'class="primary wide"')}
+    ${button(game.stage === 1 ? '開始練習 →' : '我準備好了 →', 'begin', `class="primary wide" ${game.stage === 2 && demoExperiment.busy ? 'disabled' : ''}`)}
     <p class="subtle">看懂再開始，不會自動跳過。</p></div>`;
 }
 
@@ -78,7 +112,7 @@ function continueButton() {
 
 function play() {
   const s = stages[game.stage], q = game.current;
-  const locked = game.phase !== 'play' ? 'disabled' : '';
+  const locked = game.phase !== 'play' || game.isTesting ? 'disabled' : '';
   const heading = `<div class="question-line">${game.practicing ? '引導練習 · 不計分' : `第 ${game.question + 1}／${s.questions.length} 題`}</div>`;
   let content = '';
   if (game.stage === 0) {
@@ -95,11 +129,9 @@ function play() {
       <p class="science-note">地球表面附近，1 kg 物體重量約 1 kgf。理想模型不計槓桿重量與摩擦。力矩相等時平衡通過；施力力矩較大才抬起。</p>`;
   }
   if (game.stage === 2) {
-    content = `<h2>${q.name}</h2><div class="choices two">
-      ${button('紅色石蕊試紙', 'red', `class="red-choice ${game.selected === 'red' ? 'selected' : ''}" ${locked}`)}
-      ${button('藍色石蕊試紙', 'blue', `class="blue-choice ${game.selected === 'blue' ? 'selected' : ''}" ${locked}`)}</div>
-      ${button(`<span class="beaker">🧪</span><span>${game.selected ? '點液體檢測' : '先選擇一張試紙'}</span>`, 'dip', `class="liquid" ${locked || !game.selected ? 'disabled' : ''}`)}
-      <div class="observations">${['red', 'blue'].map(p => game.observations[p] ? `<span><i class="paper ${game.observations[p]}"></i>${p === 'red' ? '紅' : '藍'}試紙 → ${game.observations[p] === 'red' ? '紅' : '藍'}色${game.observations[p] === p ? '（未變色）' : '（變色）'}</span>` : '').join('') || '檢測可重複，不影響分數'}</div>
+    content = `<h2>${q.name}</h2><div class="choices two">${paperButton('red', game.selected, !!locked)}${paperButton('blue', game.selected, !!locked)}</div>
+      ${experimentMarkup(game.experiment, q.name, game.phase !== 'play')}
+      <div class="observations">${Object.keys(game.observations).length ? '<strong>本題已完成的觀察</strong>' : ''}${['red', 'blue'].map(p => game.observations[p] ? `<span class="observation-card"><i class="mini-paper paper-${p}" aria-hidden="true"></i> ${paperName(p)}試紙：原色${paperName(p)} → ${game.observations[p] === p ? `維持${paperName(p)}，未變色` : `浸入區變成${paperName(game.observations[p])}`}<i class="mini-paper paper-${game.observations[p]}" aria-hidden="true"></i></span>` : '').join('') || '檢測可重複，不影響分數'}</div>
       ${feedback()}<div class="choices three">${answerButton('酸性', 'acid', locked)}${answerButton('中性', 'neutral', locked)}${answerButton('鹼性', 'base', locked)}</div>${continueButton()}
       <p class="science-note">沒有變色不一定是中性；可換另一張試紙。這是模擬檢測，請勿飲用實驗液體。</p>`;
   }
@@ -110,22 +142,23 @@ function play() {
 function render() {
   game.tick();
   // No wall-clock field in the render key: idle time never replaces a pressed button.
-  const key = JSON.stringify([game.phase, game.stage, game.question, game.pivot, game.feedback, game.selected, game.observations, muted, game.practicing, game.outcome, game.reaction, game.canContinue, game.answerState, game.lastAnswer]);
+  const key = JSON.stringify([game.phase, game.stage, game.question, game.pivot, game.feedback, game.selected, game.observations, muted, game.practicing, game.outcome, game.reaction, game.canContinue, game.answerState, game.lastAnswer, game.experiment.snapshot().phase, demoExperiment.snapshot().phase, demoExperiment.paper, demoProperty]);
   if (key === last) return;
   last = key;
   // Preserve the focused control through synchronous redraws for keyboard users.
   const focusAction = app.contains(document.activeElement) ? document.activeElement.dataset.action : null;
   if (game.phase === 'home') {
-    app.innerHTML = `<section class="home"><div class="lanterns">🏮 <span>SUNSHINE NIGHT MARKET</span> 🏮</div>
-      <h1>陽光<span>夜市</span></h1><p class="lead">逛一圈夜市，帶走一身科學超能力。</p><div class="market-art"><span>🥛</span><span>📦</span><span>🧪</span><span>🪐</span></div>
+    app.innerHTML = `<section class="home"><div class="lanterns" aria-hidden="true"><span class="lantern-icon">🏮</span><span class="lantern-icon">🏮</span></div>
+      ${titleMarkup()}<p class="lead">逛一圈夜市，帶走一身科學超能力。</p><div class="market-art"><span>🥛</span><span>📦</span><span>🧪</span><span>🪐</span></div>
       <p>四個攤位・不限時間<br>滿分 100 分，60 分通過</p>${button('開始挑戰 →', 'start', 'class="primary wide"')}</section>`;
   } else if (game.phase === 'result') {
     const m = medal(game.score);
-    app.innerHTML = `<section class="result"><div class="eyebrow">四個攤位，挑戰完成！</div><h1>陽光夜市</h1><div class="badge ${m.tier}"><span>${m.symbol}</span><strong>${m.name}</strong></div>
+    app.innerHTML = `<section class="result"><div class="eyebrow">四個攤位，挑戰完成！</div>${titleMarkup()}<div class="badge ${m.tier}"><span>${m.symbol}</span><strong>${m.name}</strong></div>
       <div class="final-score">${game.score}<small>／100</small></div><h2>${game.score >= 60 ? '通過' : '未通過 · 參與獎章'}</h2>${button('重新挑戰', 'restart', 'class="primary wide"')}</section>`;
   } else {
     const s = stages[game.stage];
-    app.innerHTML = `<header><span class="brand">🏮 陽光夜市</span>${button(muted ? '🔇 靜音' : '🔊 音效', 'mute', 'class="sound" aria-label="切換靜音"')}</header>
+    const testing = game.isTesting || (game.stage === 2 && game.phase === 'tutorial' && demoExperiment.busy);
+    app.innerHTML = `<header><span class="brand">🏮 ${APP_TITLE}</span>${button(muted ? '🔇 靜音' : '🔊 音效', 'mute', `class="sound" aria-label="切換靜音" ${testing ? 'disabled' : ''}`)}</header>
       <div class="hud"><span>${game.stage + 1}／4 · ${s.subject}</span><span class="untimed">不限時間</span><span>${game.score} 分</span></div>
       <div class="progress">${stages.map((_, i) => `<i class="${i <= game.stage ? 'on' : ''}"></i>`).join('')}</div>
       <section class="stall stall-${game.stage}"><div class="awning"></div><h1 class="stall-title">${s.icon} ${s.name}</h1>${game.phase === 'tutorial' ? tutorial(s) : play()}</section>`;
@@ -140,17 +173,22 @@ app.addEventListener('click', event => {
   const target = event.target.closest('button');
   if (!target || target.disabled) return;
   const action = target.dataset.action;
-  if (action === 'start' || action === 'restart') game.start();
-  else if (action === 'begin') game.begin();
+  if (action === 'start' || action === 'restart') { game.start(); resetDemo(); }
+  else if (action === 'begin') { if (!(game.stage === 2 && demoExperiment.busy)) game.begin(); }
   else if (action === 'next') game.next();
   else if (action === 'mute') muted = !muted;
   else if (action === 'left' || action === 'right') game.move(action === 'left' ? -1 : 1);
   else if (action === 'red' || action === 'blue') game.select(action);
-  else if (action === 'dip') {
-    game.tick();
-    if (game.phase === 'play' && game.stage === 2 && game.selected) {
-      game.observations[game.selected] = litmus(game.current.answer, game.selected);
-      game.feedback = game.observations[game.selected] === game.selected ? '沒有變色也是觀察結果，可以換另一種試紙！' : '觀察到了！試紙變色了。';
+  else if (action === 'dip') game.dip();
+  else if (action.startsWith('demo-')) {
+    if (game.stage !== 2 || game.phase !== 'tutorial' || demoExperiment.busy) return;
+    const value = action.slice(5);
+    if (value === 'dip') demoExperiment.start(demoProperty);
+    else if (value === 'red' || value === 'blue') demoExperiment.select(value);
+    else if (['acid', 'base', 'neutral'].includes(value)) {
+      demoProperty = value;
+      demoLiquid = { acid: '檸檬汁', base: '小蘇打水溶液', neutral: '純水' }[value];
+      demoExperiment.select(value === 'base' ? 'red' : 'blue');
     }
   } else sound(game.answer(action));
   render();

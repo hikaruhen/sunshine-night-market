@@ -31,3 +31,34 @@
 .answer-marker{display:block;font-size:14px;line-height:1.4;margin-top:5px;font-weight:800}
 .planet-grid .answer-button>span:first-child{display:flex;flex-direction:column;align-items:center;gap:14px}
 .planet-grid .answer-marker{font-size:14px}
+.home .school-title,.result .school-title{font-size:36px;letter-spacing:2px;line-height:1.35;margin-bottom:20px}
+.lanterns .lantern-icon{font-size:30px;letter-spacing:0}
+.home .school-title span,.result .school-title span{display:block}
+.school-title .school-name{font-size:clamp(24px,7vw,32px);color:#ffdf96}
+.school-title .market-name{font-size:clamp(28px,8vw,40px);color:#ffb49a}
+header{gap:8px}.brand{font-size:14px;line-height:1.5;min-width:0}.sound{flex-shrink:0}
+.paper-choice{display:flex;flex-direction:column;align-items:center;gap:7px}
+.paper-choice-preview{display:block;width:14px;height:38px;border:1px solid #6a5660;border-radius:2px}
+.paper-red{fill:#d24b5e;background:#d24b5e}.paper-blue{fill:#426bc5;background:#426bc5}.paper-empty{fill:#e5e7e8;background:#e5e7e8}
+.sample-button{display:block;width:100%;padding:8px 0 12px;background:#eef5ed;border:2px solid #8eafa2;border-radius:16px}
+.sample-button:hover{background:#eef5ed}.sample-button:disabled{opacity:1;cursor:default}
+.litmus-svg{display:block;width:100%;height:auto;max-width:320px;margin:0 auto}
+.diagram-label{font-size:14px;font-family:inherit;fill:#28433d}
+.vessel{fill:#f9ffff;stroke:#4b7e79;stroke-width:3}
+.sample-liquid{fill:#8fc8c0;fill-opacity:.55}.liquid-surface{stroke:#4f9895;stroke-width:2}
+.strip-body,.strip-tip,.strip-reference{stroke:#6b5360;stroke-width:1}
+.strip-divider{stroke:#fff;stroke-width:1;opacity:.8}
+.moving-strip{transform:translateY(0)}
+.phase-lowering .moving-strip{animation:litmusLower .8s linear forwards}
+.phase-contact .moving-strip,.phase-developing .moving-strip{transform:translateY(var(--dip-distance))}
+.phase-developing .strip-tip{animation:litmusReveal .6s linear forwards}
+.phase-raising .moving-strip{animation:litmusRaise .6s ease-out forwards}
+.sample-callout{display:block;font-size:16px;font-weight:800;padding:0 8px}
+.litmus-status{font-size:16px;line-height:1.6;padding:10px;margin:10px 0;background:#e5eedc;border-radius:10px;min-height:70px}
+.observation-card{display:block;width:100%;padding:7px 9px;background:#f0ebdf;border-radius:8px;line-height:1.6}
+.mini-paper{display:inline-block;width:9px;height:25px;vertical-align:middle;margin:0 4px;border:1px solid #715a60;border-radius:2px}
+.demo-fluids{grid-template-columns:repeat(3,minmax(0,1fr))}
+@keyframes litmusLower{from{transform:translateY(0)}to{transform:translateY(var(--dip-distance))}}
+@keyframes litmusRaise{from{transform:translateY(var(--dip-distance))}to{transform:translateY(0)}}
+@keyframes litmusReveal{from{fill:var(--original-color)}to{fill:var(--result-color)}}
+@media(prefers-reduced-motion:reduce){.phase-lowering .moving-strip,.phase-raising .moving-strip{transform:translateY(0)}.phase-contact .moving-strip,.phase-developing .moving-strip{transform:translateY(var(--dip-distance))}}

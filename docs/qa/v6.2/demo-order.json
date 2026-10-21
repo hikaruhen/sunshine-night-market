@@ -1,0 +1,50 @@
+[
+  {
+    "answerDisabled": true,
+    "beginDisabled": true,
+    "contacted": "false",
+    "fill": "rgb(66, 107, 197)",
+    "liquidTop": 458.4413757324219,
+    "paper": "blue",
+    "phase": "lowering",
+    "status": "藍色紙條向下移動中，接觸前維持原色。",
+    "tip": "blue",
+    "tipTop": 385.6654968261719
+  },
+  {
+    "answerDisabled": true,
+    "beginDisabled": true,
+    "contacted": "true",
+    "fill": "rgb(66, 107, 197)",
+    "liquidTop": 458.4413757324219,
+    "paper": "blue",
+    "phase": "contact",
+    "status": "紙條末端已接觸液體，開始觀察浸入區。",
+    "tip": "blue",
+    "tipTop": 458.4413757324219
+  },
+  {
+    "answerDisabled": true,
+    "beginDisabled": true,
+    "contacted": "true",
+    "fill": "rgb(86, 103, 183)",
+    "liquidTop": 458.4413757324219,
+    "paper": "blue",
+    "phase": "developing",
+    "status": "已接觸液體，正在觀察末端：變成紅色。",
+    "tip": "red",
+    "tipTop": 458.4413757324219
+  },
+  {
+    "answerDisabled": true,
+    "beginDisabled": false,
+    "contacted": "true",
+    "fill": "rgb(210, 75, 94)",
+    "liquidTop": 458.4413757324219,
+    "paper": "blue",
+    "phase": "result",
+    "status": "浸入區變成紅色；上半部保留原色作對照。",
+    "tip": "red",
+    "tipTop": 358.584228515625
+  }
+]

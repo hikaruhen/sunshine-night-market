@@ -1,4 +1,4 @@
-# 陽光夜市 Sunshine Night Market — V6.1
+# 內湖國中陽光科學夜市 — V6.2
 
 繁體中文、手機優先的 HTML5 科學遊戲。不限時間，依序完成食品冷藏必要性、槓桿、紅藍石蕊、太陽系四關，滿分 100、60 分通過，每位玩家都有電子獎章。無登入、無資料庫、無外部 CDN、不收集個資，預設靜音。
 
@@ -36,13 +36,13 @@ node scripts/serve.mjs --dist
 
 ## 文件與架構
 
-- GAME_SPEC.md：完整使用者 V6.1 規格。
+- GAME_SPEC.md：完整使用者 V6.2 規格。
 - IMPLEMENTATION_PLAN.md：架構、槓桿題庫與計時決策。
 - ACCEPTANCE_TESTS.md：驗收項目。
 - TEST_REPORT.md：實際測試結果，區分單元與瀏覽器驗證。
 - RETRY_UX_REVIEW.md：錯答／重試體驗的獨立複驗步驟。
 - KNOWN_ISSUES.md：未驗證項目與限制。
-- src/data.js：集中題庫、分數、秒數與科學函式。
+- src/data.js：集中題庫、分數與科學函式。
 - src/engine.js：可注入時鐘的遊戲狀態機。
 - src/app.js / style.css：畫面、單指點擊、CSS 美術與動畫。
 - src/food-art.js：依開封、乾燥／泡發、切片狀態繪製的專用本機 SVG。
@@ -51,3 +51,9 @@ node scripts/serve.mjs --dist
 - test/game.test.js：Node 內建自動化測試。
 
 版本分支：codex/sunshine-v6。交付狀態與驗證限制以 TEST_REPORT.md 為準。
+
+## 石蕊試紙 V6.2
+
+先選紅／藍試紙，能看到乾淨的原色紙條；再點杯中液體，紙條向下浸入，接觸後末端才顯色，最後取出保留結果。原色對照、原始紙條顏色及本次結果都有文字。未變色會明確說明維持紅色／藍色。動畫期間暫停換紙與作答，完成可不限次重測且不影響得分，每次都使用乾淨紙條。教學也能操作同一示範。
+
+作品名稱統一為「內湖國中陽光科學夜市」；GitHub儲存庫、專案路徑及套件識別仍保留 sunshine-night-market。原始需求與歷史測試文件保留當時名稱。獨立複驗步驟見 LITMUS_REVIEW.md。

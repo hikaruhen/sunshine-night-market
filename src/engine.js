@@ -1,4 +1,5 @@
 import { stages, practice, leverOutcome } from './data.js';
+import { LitmusExperiment, litmusMessage } from './litmus.js';
 
 // The clock controls short presentation animations, never a play deadline.
 export class Game {
@@ -15,6 +16,7 @@ export class Game {
     this.practicing = false;
     this.selected = null;
     this.observations = {};
+    this.experiment = new LitmusExperiment(this.now);
     this.feedback = '';
     this.outcome = null;
     this.reaction = 0;
@@ -30,6 +32,7 @@ export class Game {
     this.stage = stage;
     this.selected = null;
     this.observations = {};
+    this.experiment.reset();
     this.feedback = '';
     this.outcome = null;
     this.answerState = null;
@@ -48,6 +51,12 @@ export class Game {
   resetPivot() { this.pivot = Math.floor((this.current?.length ?? 6) / 2); }
 
   tick() {
+    const sample = this.experiment.sample;
+    if (this.stage === 2 && this.phase === 'play' && sample && !sample.committed && this.experiment.snapshot().phase === 'result') {
+      this.observations[sample.paper] = sample.result;
+      this.feedback = litmusMessage(this.experiment.snapshot());
+      sample.committed = true;
+    }
     // Idle time and animation completion never advance a question automatically.
     return this.phase;
   }
@@ -70,6 +79,7 @@ export class Game {
       this.question++;
       this.selected = null;
       this.observations = {};
+      this.experiment.reset();
       this.feedback = '';
       this.outcome = null;
       if (this.question === stages[this.stage].questions.length) this.enter(this.stage + 1);
@@ -92,14 +102,32 @@ export class Game {
 
   select(paper) {
     this.tick();
-    if (this.phase === 'play' && this.stage === 2 && ['red', 'blue'].includes(paper)) this.selected = paper;
+    if (this.phase === 'play' && this.stage === 2 && this.experiment.select(paper)) {
+      this.selected = paper;
+      this.answerState = null;
+      this.lastAnswer = null;
+      this.feedback = litmusMessage(this.experiment.snapshot());
+      return true;
+    }
+    return false;
+  }
+
+  get isTesting() { return this.stage === 2 && this.experiment.busy; }
+
+  dip() {
+    this.tick();
+    if (this.stage !== 2 || this.phase !== 'play' || !this.selected || !this.experiment.start(this.current.answer)) return false;
+    this.answerState = null;
+    this.lastAnswer = null;
+    this.feedback = '正在檢測，完成後可判斷；檢測不計分。';
+    return true;
   }
 
   answer(value) {
     const stage = this.stage, question = this.question, phase = this.phase;
     this.tick();
     // Queued clicks from an animation cannot answer the following question.
-    if (phase !== 'play' || this.phase !== 'play' || stage !== this.stage || question !== this.question) return false;
+    if (phase !== 'play' || this.phase !== 'play' || stage !== this.stage || question !== this.question || this.isTesting) return false;
     const q = this.current;
     this.outcome = this.stage === 1 ? leverOutcome(q, this.pivot) : null;
     const correct = this.stage === 1 ? this.outcome !== 'insufficient' : value === q.answer;

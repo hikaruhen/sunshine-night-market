@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createConnection } from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
+import { APP_TITLE } from '../src/config.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const url = 'http://127.0.0.1:5173/';
@@ -25,7 +26,7 @@ async function listening() {
 async function verify() {
   const response = await fetch(url, { signal: AbortSignal.timeout(2000) });
   const html = await response.text();
-  if (response.status !== 200 || !html.includes('<title>陽光夜市') || !html.includes('./src/app.js')) {
+  if (response.status !== 200 || !html.includes(`<title>${APP_TITLE}`) || !html.includes('./src/app.js')) {
     throw new Error('Port 5173 is in use but is not the game preview. Nothing was stopped or replaced.');
   }
 }

@@ -1,0 +1,46 @@
+[
+  {
+    "clientWidth": 305,
+    "heading": "內湖國中陽光科學夜市",
+    "headingFits": true,
+    "height": 568,
+    "score": "100／100",
+    "screen": "result",
+    "scrollWidth": 305,
+    "title": "內湖國中陽光科學夜市",
+    "width": 320
+  },
+  {
+    "clientWidth": 390,
+    "heading": "內湖國中陽光科學夜市",
+    "headingFits": true,
+    "height": 844,
+    "score": "100／100",
+    "screen": "result",
+    "scrollWidth": 390,
+    "title": "內湖國中陽光科學夜市",
+    "width": 390
+  },
+  {
+    "clientWidth": 305,
+    "heading": "內湖國中陽光科學夜市",
+    "headingFits": true,
+    "height": 568,
+    "removedTextsReturned": false,
+    "screen": "home",
+    "scrollWidth": 305,
+    "title": "內湖國中陽光科學夜市",
+    "width": 320
+  },
+  {
+    "clientWidth": 390,
+    "heading": "內湖國中陽光科學夜市",
+    "headingFits": true,
+    "height": 844,
+    "removedTextsReturned": false,
+    "screen": "home",
+    "scrollWidth": 390,
+    "title": "內湖國中陽光科學夜市",
+    "width": 390
+  }
+]
