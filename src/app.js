@@ -17,8 +17,10 @@ function resetDemo() {
 resetDemo();
 const button = (text, action, extra = '') => `<button data-action="${action}" ${extra}>${text}</button>`;
 
-function titleMarkup() {
-  return `<h1 class="school-title" aria-label="${APP_TITLE}"><span class="school-name">內湖國中</span><span class="market-name">陽光科學夜市</span></h1>`;
+function titleMarkup(gateway = false) {
+  const title = `<h1 class="school-title" aria-label="${APP_TITLE}"><span class="school-name">內湖國中</span><span class="market-name">陽光科學夜市</span></h1>`;
+  if (!gateway) return title;
+  return `<div class="market-gateway"><div class="gateway-sun" aria-hidden="true"><svg viewBox="0 0 80 80"><g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"><path d="M40 5v8m0 54v8M5 40h8m54 0h8M15 15l6 6m38 38 6 6M15 65l6-6m38-38 6-6"/></g><circle cx="40" cy="40" r="21" fill="currentColor"/><path d="M31 43q9 10 18 0" fill="none" stroke="#a25232" stroke-width="3" stroke-linecap="round"/></svg></div>${title}<div class="gateway-lights" aria-hidden="true">${'<i></i>'.repeat(9)}</div><div class="gateway-awning" aria-hidden="true"></div></div>`;
 }
 
 function paperButton(paper, selected, disabled, demo = false) {
@@ -79,7 +81,9 @@ function tutorial(s) {
     <div class="math">6 × 4 = 24 kgf·m<br>12 × 2 = 24 kgf·m</div><p>24＝24：力矩平衡，挑戰通過。<br>施力力矩較大：才會抬起貨箱。</p>`;
   if (game.stage === 2) {
     const busy = demoExperiment.busy;
-    scene = `<p>示範不計分：先選試紙，再點杯中液體。</p>
+    scene = `<table class="litmus-guide"><caption>先學會看試紙顏色</caption><thead><tr><th scope="col">液體性質</th><th scope="col">藍色試紙</th><th scope="col">紅色試紙</th></tr></thead><tbody><tr><th scope="row">酸性</th><td>藍 → 紅<br><strong>變紅</strong></td><td>維持紅色<br>不變色</td></tr><tr><th scope="row">鹼性</th><td>維持藍色<br>不變色</td><td>紅 → 藍<br><strong>變藍</strong></td></tr><tr><th scope="row">中性</th><td>維持藍色<br><strong>不變色</strong></td><td>維持紅色<br><strong>不變色</strong></td></tr></tbody></table>
+      <p class="litmus-guide-note"><strong>單張試紙不變色，不能直接判定中性。</strong><br>藍試紙不變色，可能是鹼性或中性；紅試紙不變色，可能是酸性或中性。換另一種試紙，兩種都維持原色才判為中性。</p>
+      <p>示範不計分：先選試紙，再點杯中液體。可切換檸檬汁、小蘇打水與純水，分別用兩種試紙觀察。</p>
       <div class="choices demo-fluids">${button('檸檬汁', 'demo-acid', busy ? 'disabled' : '')}${button('小蘇打水', 'demo-base', busy ? 'disabled' : '')}${button('純水', 'demo-neutral', busy ? 'disabled' : '')}</div>
       <div class="choices two">${paperButton('red', demoExperiment.paper, busy, true)}${paperButton('blue', demoExperiment.paper, busy, true)}</div>
       ${experimentMarkup(demoExperiment, demoLiquid, false, true)}<p class="science-note">先看原色；末端進入液面後，才觀察變色或不變色。</p>`;
@@ -148,8 +152,8 @@ function render() {
   // Preserve the focused control through synchronous redraws for keyboard users.
   const focusAction = app.contains(document.activeElement) ? document.activeElement.dataset.action : null;
   if (game.phase === 'home') {
-    app.innerHTML = `<section class="home"><div class="lanterns" aria-hidden="true"><span class="lantern-icon">🏮</span><span class="lantern-icon">🏮</span></div>
-      ${titleMarkup()}<p class="lead">逛一圈夜市，帶走一身科學超能力。</p><div class="market-art"><span>🥛</span><span>📦</span><span>🧪</span><span>🪐</span></div>
+    app.innerHTML = `<section class="home">
+      ${titleMarkup(true)}<p class="lead">逛一圈夜市，帶走一身科學超能力。</p><div class="market-art"><span>🥛</span><span>📦</span><span>🧪</span><span>🪐</span></div>
       <p>四個攤位・不限時間<br>滿分 100 分，60 分通過</p>${button('開始挑戰 →', 'start', 'class="primary wide"')}</section>`;
   } else if (game.phase === 'result') {
     const m = medal(game.score);

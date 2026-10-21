@@ -8,7 +8,7 @@ export const stages = [
  ].map(q=>({...q,first:5,retry:3}))},
  {name:'槓桿大力士',subject:'物理',icon:'📦',tip:'移動支點，比較兩邊力矩。相等是平衡，也能通過挑戰；施力力矩較大才會抬起貨箱。',questions:[
  {mass:12,force:6,length:6,first:5,retry:3}, {mass:18,force:6,length:8,first:10,retry:5}, {mass:10,force:6,length:8,first:10,retry:5}]},
- {name:'酸鹼神探',subject:'化學',icon:'🧪',tip:'藍試紙遇酸變紅；紅試紙遇鹼變藍。單張沒變色，還需要另一張幫忙！',questions:[
+ {name:'酸鹼神探',subject:'化學',icon:'🧪',tip:'藍試紙遇酸變紅；紅試紙遇鹼變藍；中性讓紅、藍試紙都維持原色、不變色。',questions:[
  {name:'檸檬汁',answer:'acid',hint:'藍色石蕊試紙遇酸會變紅。',first:5,retry:3}, {name:'小蘇打水溶液',answer:'base',hint:'小蘇打水溶液是弱鹼性，紅試紙會變藍。',first:10,retry:5}, {name:'純水',answer:'neutral',hint:'一般教學條件下視為中性，紅藍試紙都不變色。',first:10,retry:5}]},
  {name:'太陽系神射手',subject:'地球科學',icon:'🪐',tip:'水星離太陽最近；木星最大；土星的環最顯著。其他巨行星也有環喔！',questions:[
  {name:'哪顆行星距離太陽最近？',answer:'水星',choices:['水星','金星','地球','火星'],hint:'水星是太陽的近鄰。',first:5,retry:3}, {name:'太陽系最大的行星是哪顆？',answer:'木星',choices:['海王星','地球','木星','火星'],hint:'木星是太陽系最大的行星。',first:10,retry:5}, {name:'哪顆行星有最顯著的行星環？',answer:'土星',choices:['金星','土星','天王星','水星'],hint:'土星的環最容易辨識，其他巨行星也有環。',first:10,retry:5}]}
