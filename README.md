@@ -6,7 +6,7 @@
 
 遊戲網址：https://hikaruhen.github.io/sunshine-night-market/
 
-本輪已取得公開發布授權，採GitHub Pages部署。發布方式見DEPLOYMENT.md；是否實際部署成功及公開站驗證結果，以DEPLOYMENT_REPORT.md為準。
+已部署至GitHub Pages，公開網址已實測首頁、8個資產及完整四關至100分。發布方式見DEPLOYMENT.md，具體部署紀錄與限制見DEPLOYMENT_REPORT.md。
 
 ## 本機啟動
 

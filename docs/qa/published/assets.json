@@ -1,0 +1,50 @@
+[
+  {
+    "path": "index.html",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "sameContent": true
+  },
+  {
+    "path": "src/style.css",
+    "status": 200,
+    "contentType": "text/css; charset=utf-8",
+    "sameContent": true
+  },
+  {
+    "path": "src/app.js",
+    "status": 200,
+    "contentType": "application/javascript; charset=utf-8",
+    "sameContent": true
+  },
+  {
+    "path": "src/config.js",
+    "status": 200,
+    "contentType": "application/javascript; charset=utf-8",
+    "sameContent": true
+  },
+  {
+    "path": "src/data.js",
+    "status": 200,
+    "contentType": "application/javascript; charset=utf-8",
+    "sameContent": true
+  },
+  {
+    "path": "src/engine.js",
+    "status": 200,
+    "contentType": "application/javascript; charset=utf-8",
+    "sameContent": true
+  },
+  {
+    "path": "src/food-art.js",
+    "status": 200,
+    "contentType": "application/javascript; charset=utf-8",
+    "sameContent": true
+  },
+  {
+    "path": "src/litmus.js",
+    "status": 200,
+    "contentType": "application/javascript; charset=utf-8",
+    "sameContent": true
+  }
+]

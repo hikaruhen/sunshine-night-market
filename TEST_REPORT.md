@@ -1,6 +1,6 @@
 # 內湖國中陽光科學夜市 V6.2 測試報告
 
-日期：2026-10-21（臺灣時間）。Windows、Node.js v22.16.0、Codex內建瀏覽器。分支codex/sunshine-v6，本次只建立本機提交，不推送或部署。歷史報告存docs/TEST_REPORT_BEFORE_V6.2_TITLE_LITMUS.md，未以舊測試冒充本輪結果。
+日期：2026-10-21（臺灣時間）。Windows、Node.js v22.16.0、Codex內建瀏覽器。分支codex/sunshine-v6；此份為V6.2研發驗證，後續已依新授權公開發布，最新結果見DEPLOYMENT_REPORT.md。歷史報告存docs/TEST_REPORT_BEFORE_V6.2_TITLE_LITMUS.md，未以舊測試冒充本輪結果。
 
 ## 本輪變更
 
@@ -88,3 +88,7 @@ npm run build成功產生dist，包含config.js及litmus.js。app.js、engine.js
 - prefers-reduced-motion已提供無連續動畫的分段位置與文字，模型不依賴動畫事件；已核對其共同邏輯與簡化CSS。現有瀏覽器工具僅有viewport／visibility，無媒體偏好模擬，因此未實際切換系統偏好測試，不宣稱該分支瀏覽器實測通過。
 - 獨立協作複驗尚未完成，本輪只回報自行實測證據，不邀使用者代驗收。
 - 本機127.0.0.1:5173服務保留，不公開部署或變更權限。此次只做本機提交，不推送。最終已確認一鍵啟動器輸出Already running，新名稱首頁回應HTTP200，實際監聽位址仍為127.0.0.1。
+
+## 公開發布補充（2026-10-21）
+
+使用者已解除本次指定GitHub Pages的發布限制。發布前重跑51項測試（新增子路徑資產測試）及正式建置通過；實際部署success，公開站8資產均200且內容一致，另實玩六種石蕊及完整四關100分。詳細提交、Actions連結及證據見DEPLOYMENT_REPORT.md；前文未推送／未部署敘述屬先前研發回合，不代表最新公開狀態。
