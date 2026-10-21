@@ -116,9 +116,9 @@ function render() {
   // Preserve the focused control through synchronous redraws for keyboard users.
   const focusAction = app.contains(document.activeElement) ? document.activeElement.dataset.action : null;
   if (game.phase === 'home') {
-    app.innerHTML = `<section class="home"><div class="lanterns">🏮 <span>SUNSHINE NIGHT MARKET</span> 🏮</div><div class="eyebrow">V6.1 · 慢慢想，也能闖關</div>
+    app.innerHTML = `<section class="home"><div class="lanterns">🏮 <span>SUNSHINE NIGHT MARKET</span> 🏮</div>
       <h1>陽光<span>夜市</span></h1><p class="lead">逛一圈夜市，帶走一身科學超能力。</p><div class="market-art"><span>🥛</span><span>📦</span><span>🧪</span><span>🪐</span></div>
-      <div class="route">生物 → 物理 → 化學 → 地球科學</div><p>四個攤位・不限時間<br>滿分 100 分，60 分通過</p>${button('開始挑戰 →', 'start', 'class="primary wide"')}<p class="subtle">不用登入 · 不收集個資 · 單指就能玩</p></section>`;
+      <p>四個攤位・不限時間<br>滿分 100 分，60 分通過</p>${button('開始挑戰 →', 'start', 'class="primary wide"')}</section>`;
   } else if (game.phase === 'result') {
     const m = medal(game.score);
     app.innerHTML = `<section class="result"><div class="eyebrow">四個攤位，挑戰完成！</div><h1>陽光夜市</h1><div class="badge ${m.tier}"><span>${m.symbol}</span><strong>${m.name}</strong></div>
