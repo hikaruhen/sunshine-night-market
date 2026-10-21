@@ -82,7 +82,6 @@ function tutorial(s) {
   if (game.stage === 2) {
     const busy = demoExperiment.busy;
     scene = `<table class="litmus-guide"><caption>先學會看試紙顏色</caption><thead><tr><th scope="col">液體性質</th><th scope="col">藍色試紙</th><th scope="col">紅色試紙</th></tr></thead><tbody><tr><th scope="row">酸性</th><td>藍 → 紅<br><strong>變紅</strong></td><td>維持紅色<br>不變色</td></tr><tr><th scope="row">鹼性</th><td>維持藍色<br>不變色</td><td>紅 → 藍<br><strong>變藍</strong></td></tr><tr><th scope="row">中性</th><td>維持藍色<br><strong>不變色</strong></td><td>維持紅色<br><strong>不變色</strong></td></tr></tbody></table>
-      <p class="litmus-guide-note"><strong>單張試紙不變色，不能直接判定中性。</strong><br>藍試紙不變色，可能是鹼性或中性；紅試紙不變色，可能是酸性或中性。換另一種試紙，兩種都維持原色才判為中性。</p>
       <p>示範不計分：先選試紙，再點杯中液體。可切換檸檬汁、小蘇打水與純水，分別用兩種試紙觀察。</p>
       <div class="choices demo-fluids">${button('檸檬汁', 'demo-acid', busy ? 'disabled' : '')}${button('小蘇打水', 'demo-base', busy ? 'disabled' : '')}${button('純水', 'demo-neutral', busy ? 'disabled' : '')}</div>
       <div class="choices two">${paperButton('red', demoExperiment.paper, busy, true)}${paperButton('blue', demoExperiment.paper, busy, true)}</div>
@@ -91,7 +90,7 @@ function tutorial(s) {
   if (game.stage === 3) scene = '<div class="demo-planets">☀️　🌑　🟠　🪐</div><p>最近：水星 · 最大：木星 · 環最顯著：土星</p>';
   return `<div class="tutorial"><div class="eyebrow">先看示範 · 不限時間</div>${scene}<h2>${s.tip}</h2>
     ${button(game.stage === 1 ? '開始練習 →' : '我準備好了 →', 'begin', `class="primary wide" ${game.stage === 2 && demoExperiment.busy ? 'disabled' : ''}`)}
-    <p class="subtle">看懂再開始，不會自動跳過。</p></div>`;
+    </div>`;
 }
 
 const planetClasses = { 水星: 'mercury', 金星: 'venus', 地球: 'earth', 火星: 'mars', 木星: 'jupiter', 土星: 'saturn', 天王星: 'uranus', 海王星: 'neptune' };

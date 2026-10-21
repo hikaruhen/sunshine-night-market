@@ -76,7 +76,6 @@ header{gap:8px}.brand{font-size:14px;line-height:1.5;min-width:0}.sound{flex-shr
 .litmus-guide caption{font-size:20px;font-weight:800;color:#28433d;margin-bottom:12px}
 .litmus-guide th,.litmus-guide td{padding:9px 4px;border:1px solid #bacaba;overflow-wrap:anywhere}
 .litmus-guide thead{background:#e5eedc}.litmus-guide th:first-child{width:24%}
-.litmus-guide-note{text-align:left;padding:12px;border-radius:10px;background:#f2e8d3;font-size:15px}
 @keyframes litmusLower{from{transform:translateY(0)}to{transform:translateY(var(--dip-distance))}}
 @keyframes litmusRaise{from{transform:translateY(var(--dip-distance))}to{transform:translateY(0)}}
 @keyframes litmusReveal{from{fill:var(--original-color)}to{fill:var(--result-color)}}
